@@ -17,15 +17,17 @@ def find_videos(chan, n):
         "order" : "date",
         "maxResults" : n
         }
-    response = rq.get(url, params = params).json() # ask youtube API
-    videos = response["items"]
+    response = rq.get(url, params = params) # ask youtube API
+    if response.status_code != 200:
+        return pd.DataFrame()
+    videos = response.json().get("items", [])
     result = []
     for video in videos:
-        if video["id"]["kind"] == "youtube#video":
-            video_id = video["id"]["videoId"]
-            video_title = video["snippet"]["title"]
-            video_date = video["snippet"]["publishedAt"][:10]
-            channel_title = video["snippet"]["channelTitle"]
+        if video.get("id", {}).get("kind", "") == "youtube#video":
+            video_id = video.get("id", {}).get("videoId", "")
+            video_title = video.get("snippet", {}).get("title", "")
+            video_date = video.get("snippet", {}).get("publishedAt", "XXXX-XX-XX")[:10]
+            channel_title = video.get("snippet", {}).get("channelTitle", "")
             result.append({
                 "date" : video_date,
                 "channel" : chan,
@@ -41,7 +43,8 @@ def find_multichannel_videos(channels, n):
     videos_df = pd.DataFrame()
     for channel in channels:
         videos_df = pd.concat([videos_df, find_videos(channel, n)])
-    videos_df.sort_values(by = "date", ascending = False, inplace = True)
+    if videos_df.shape[0] > 0 and "date" in videos_df.columns:
+        videos_df.sort_values(by = "date", ascending = False, inplace = True)
     return videos_df.head(n)
 
 def create_html(id_list):
@@ -50,9 +53,16 @@ def create_html(id_list):
     '''
     html_code = '<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset="utf-8">\n\t\t<title>youtube watchlist</title>\n\t</head>\n\t<body>'
     for video_id in id_list:
-        html_code += '\n\t\t<iframe height="200" src="https://www.youtube.com/embed/' + video_id + '" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; encrypted-media" allowfullscreen></iframe>'
+        html_code += f'\n\t\t<iframe height="200" src="https://www.youtube.com/embed/{video_id}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; encrypted-media" allowfullscreen></iframe>'
     html_code += '\n\t</body>\n</html>'
     return html_code
+
+def write_to_file(path, text):
+    '''
+    write text to a file at path
+    '''
+    with open(path, 'w') as file:
+        file.write(text)
 
 def main():
     '''
@@ -77,8 +87,13 @@ def main():
     "UCLXDNUOO3EQ80VmD9nQBHPg", # fouloscopie
     ] # channel IDs
     latest_videos_df = find_multichannel_videos(channels, 20)
-    id_list = latest_videos_df["id"].tolist()
-    print(create_html(id_list))
+    if latest_videos_df.shape[0] > 0 and "id" in latest_videos_df.columns:
+        id_list = latest_videos_df["id"].tolist()
+        path = "./youtubeWatchlist.html"
+        print("Creating new HTML file")
+        write_to_file(path, create_html(id_list))
+    else:
+        print("Cannot fetch videos (existing HTML file was preserved)")
 
 main()
 
