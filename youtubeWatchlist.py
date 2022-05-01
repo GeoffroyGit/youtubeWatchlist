@@ -85,6 +85,8 @@ def main():
     "UCWty1tzwZW_ZNSp5GVGteaA", # la statistique expliquee a mon chat
     "UC2_OG1L8DLTzQ7UrZVOk7OA", # axolot
     "UCLXDNUOO3EQ80VmD9nQBHPg", # fouloscopie
+    "UCZxLew-WXWm5dhRZBgEFl-Q", # le vortex
+    "UCfxwT02Bu5R7l21uMAu8H1w", # string theory fr
     ] # channel IDs
     latest_videos_df = find_multichannel_videos(channels, 20)
     if latest_videos_df.shape[0] > 0 and "id" in latest_videos_df.columns:
