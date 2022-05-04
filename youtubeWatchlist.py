@@ -87,6 +87,7 @@ def main():
     "UCLXDNUOO3EQ80VmD9nQBHPg", # fouloscopie
     "UCZxLew-WXWm5dhRZBgEFl-Q", # le vortex
     "UCfxwT02Bu5R7l21uMAu8H1w", # string theory fr
+    "UCnf0fDz1vTYW-sl36wbVMbg", # les revues du monde
     ] # channel IDs
     latest_videos_df = find_multichannel_videos(channels, 20)
     if latest_videos_df.shape[0] > 0 and "id" in latest_videos_df.columns:
