@@ -18,7 +18,6 @@ The channels.csv file looks something like this:
 |:------|:---|
 |UCyJDHgrsUKuWLe05GvC2lng|stupid economics|
 |UCP46_MXP_WG_auH88FnfS1A|nota bene|
-|UCtqICqGbPSbTN09K1_7VZ3Q|dirtybiology|
 |UCKjDY4joMPcoRMmd-G1yz1Q|c'est une autre histoire|
 
 As long as you have a column named "channel" with the channel id, you're good to go.
