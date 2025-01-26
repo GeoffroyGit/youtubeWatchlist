@@ -70,7 +70,7 @@ class VideoFinder():
         get the latest videos from my favourites youtube channels
         and group them into a single web page
         '''
-        latest_videos_df = self.find_multichannel_videos(channels, 20)
+        latest_videos_df = self.find_multichannel_videos(channels, 40)
         if latest_videos_df.shape[0] > 0 and "id" in latest_videos_df.columns:
             id_list = latest_videos_df["id"].tolist()
             self.write_to_file(self.create_html(id_list))
