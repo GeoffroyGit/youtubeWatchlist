@@ -48,14 +48,17 @@ class VideoFinder():
             videos_df.sort_values(by = "date", ascending = False, inplace = True)
         return videos_df.head(n)
 
-    def create_html(self, id_list):
+    def create_html(self, videos_df):
         '''
         create an html page that embed all youtube videos specified in id_list
         '''
-        html_code = '<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset="utf-8">\n\t\t<title>youtube watchlist</title>\n\t</head>\n\t<body>'
-        for video_id in id_list:
-            html_code += f'\n\t\t<iframe height="200" src="https://www.youtube.com/embed/{video_id}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; encrypted-media" allowfullscreen></iframe>'
-        html_code += '\n\t</body>\n</html>'
+        id_list = videos_df["id"].tolist()
+        channel_title_list = videos_df["channel title"].tolist()
+        video_title_list = videos_df["video title"].tolist()
+        html_code = '<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset="utf-8">\n\t\t<title>youtube watchlist</title>\n\t</head>\n\t<body>\n\t\t<ul>'
+        for video_id, video_title, channel_title in zip(id_list, video_title_list, channel_title_list):
+            html_code += f'\n\t\t\t<li>{channel_title} - <a href="https://www.youtube.com/watch?v={video_id}">{video_title}</a></li>'
+        html_code += '\n\t\t</ul>\n\t</body>\n</html>'
         return html_code
 
     def write_to_file(self, text):
@@ -71,9 +74,8 @@ class VideoFinder():
         and group them into a single web page
         '''
         latest_videos_df = self.find_multichannel_videos(channels, 40)
-        if latest_videos_df.shape[0] > 0 and "id" in latest_videos_df.columns:
-            id_list = latest_videos_df["id"].tolist()
-            self.write_to_file(self.create_html(id_list))
+        if latest_videos_df.shape[0] > 0 :
+            self.write_to_file(self.create_html(latest_videos_df))
             return "Created new HTML file"
         else:
             return "Cannot fetch videos (existing HTML file was preserved)"
