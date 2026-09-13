@@ -1,3 +1,4 @@
+import argparse
 import requests as rq
 import pandas as pd
 
@@ -43,7 +44,7 @@ class VideoFinder():
                     "video title" : video_title})
         return pd.DataFrame(result)
 
-    def find_multichannel_videos(self, channels, n = 100):
+    def find_multichannel_videos(self, channels, n):
         '''
         find the n lastest videos from multiple channels
         '''
@@ -75,12 +76,12 @@ class VideoFinder():
         with open(self.path, 'w') as file:
             file.write(text)
 
-    def make(self, channels):
+    def make(self, channels, n = 100):
         '''
         get the latest videos from my favourites youtube channels
         and group them into a single web page
         '''
-        latest_videos_df = self.find_multichannel_videos(channels)
+        latest_videos_df = self.find_multichannel_videos(channels, n)
         if latest_videos_df.shape[0] > 0 :
             self.write_to_file(self.create_html(latest_videos_df))
             return "Created new HTML file"
@@ -88,6 +89,18 @@ class VideoFinder():
             return "Cannot fetch videos (existing HTML file was preserved)"
 
 
+# get arguments passed to the python script
+parser = argparse.ArgumentParser(description="This program fetch videos")
+parser.add_argument("-n", "--number", metavar="number", required=False, help='the total number of videos to fetch')
+args = parser.parse_args()
+argument_passed=args.number
+try:
+    n = int(argument_passed)
+except ValueError:
+    n = None
+except TypeError:
+    n = None
+n = n if n is not None and n >= 0 else None
 
 # get API key from config file (contains only one key)
 key_df = pd.read_csv("./config.csv")
@@ -101,5 +114,8 @@ channels = pd.read_csv("./channels.csv")
 
 # create and run video finder
 video_finder = VideoFinder(key, path)
-msg = video_finder.make(channels)
+if n is None:
+    msg = video_finder.make(channels)
+else:
+    msg = video_finder.make(channels, n)
 print(msg)
