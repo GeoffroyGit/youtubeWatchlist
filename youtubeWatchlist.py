@@ -1,3 +1,4 @@
+import argparse
 import requests as rq
 import pandas as pd
 
@@ -6,10 +7,16 @@ class VideoFinder():
         self.key = key
         self.path = path
 
-    def find_videos(self, chan, n):
+    def find_videos(self, chan, n = 50):
         '''
         find the n latest videos from a youtube channel using the youtube API
+        (n must be between 0 to 50)
         '''
+        if n < 0:
+            n = 0
+        elif n > 50:
+            n = 50
+
         url = "https://www.googleapis.com/youtube/v3/search"
         params = {
             "key" : self.key,
@@ -52,12 +59,13 @@ class VideoFinder():
         '''
         create an html page that embed all youtube videos specified in id_list
         '''
+        date_list = videos_df["date"].tolist()
         id_list = videos_df["id"].tolist()
         channel_title_list = videos_df["channel title"].tolist()
         video_title_list = videos_df["video title"].tolist()
         html_code = '<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset="utf-8">\n\t\t<title>youtube watchlist</title>\n\t</head>\n\t<body>\n\t\t<ul>'
-        for video_id, video_title, channel_title in zip(id_list, video_title_list, channel_title_list):
-            html_code += f'\n\t\t\t<li>{channel_title} - <a href="https://www.youtube.com/watch?v={video_id}">{video_title}</a></li>'
+        for video_date, video_id, video_title, channel_title in zip(date_list, id_list, video_title_list, channel_title_list):
+            html_code += f'\n\t\t\t<li>{video_date} - {channel_title} - <a href="https://www.youtube.com/watch?v={video_id}">{video_title}</a></li>'
         html_code += '\n\t\t</ul>\n\t</body>\n</html>'
         return html_code
 
@@ -68,12 +76,12 @@ class VideoFinder():
         with open(self.path, 'w') as file:
             file.write(text)
 
-    def make(self, channels):
+    def make(self, channels, n = 100):
         '''
         get the latest videos from my favourites youtube channels
         and group them into a single web page
         '''
-        latest_videos_df = self.find_multichannel_videos(channels, 40)
+        latest_videos_df = self.find_multichannel_videos(channels, n)
         if latest_videos_df.shape[0] > 0 :
             self.write_to_file(self.create_html(latest_videos_df))
             return "Created new HTML file"
@@ -81,6 +89,18 @@ class VideoFinder():
             return "Cannot fetch videos (existing HTML file was preserved)"
 
 
+# get arguments passed to the python script
+parser = argparse.ArgumentParser(description="This program fetch videos")
+parser.add_argument("-n", "--number", metavar="number", required=False, help='the total number of videos to fetch')
+args = parser.parse_args()
+argument_passed=args.number
+try:
+    n = int(argument_passed)
+except ValueError:
+    n = None
+except TypeError:
+    n = None
+n = n if n is not None and n >= 0 else None
 
 # get API key from config file (contains only one key)
 key_df = pd.read_csv("./config.csv")
@@ -94,5 +114,8 @@ channels = pd.read_csv("./channels.csv")
 
 # create and run video finder
 video_finder = VideoFinder(key, path)
-msg = video_finder.make(channels)
+if n is None:
+    msg = video_finder.make(channels)
+else:
+    msg = video_finder.make(channels, n)
 print(msg)
