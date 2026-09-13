@@ -6,10 +6,16 @@ class VideoFinder():
         self.key = key
         self.path = path
 
-    def find_videos(self, chan, n):
+    def find_videos(self, chan, n = 50):
         '''
         find the n latest videos from a youtube channel using the youtube API
+        (n must be between 0 to 50)
         '''
+        if n < 0:
+            n = 0
+        elif n > 50:
+            n = 50
+
         url = "https://www.googleapis.com/youtube/v3/search"
         params = {
             "key" : self.key,
@@ -37,7 +43,7 @@ class VideoFinder():
                     "video title" : video_title})
         return pd.DataFrame(result)
 
-    def find_multichannel_videos(self, channels, n):
+    def find_multichannel_videos(self, channels, n = 100):
         '''
         find the n lastest videos from multiple channels
         '''
@@ -52,12 +58,13 @@ class VideoFinder():
         '''
         create an html page that embed all youtube videos specified in id_list
         '''
+        date_list = videos_df["date"].tolist()
         id_list = videos_df["id"].tolist()
         channel_title_list = videos_df["channel title"].tolist()
         video_title_list = videos_df["video title"].tolist()
         html_code = '<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset="utf-8">\n\t\t<title>youtube watchlist</title>\n\t</head>\n\t<body>\n\t\t<ul>'
-        for video_id, video_title, channel_title in zip(id_list, video_title_list, channel_title_list):
-            html_code += f'\n\t\t\t<li>{channel_title} - <a href="https://www.youtube.com/watch?v={video_id}">{video_title}</a></li>'
+        for video_date, video_id, video_title, channel_title in zip(date_list, id_list, video_title_list, channel_title_list):
+            html_code += f'\n\t\t\t<li>{video_date} - {channel_title} - <a href="https://www.youtube.com/watch?v={video_id}">{video_title}</a></li>'
         html_code += '\n\t\t</ul>\n\t</body>\n</html>'
         return html_code
 
@@ -73,7 +80,7 @@ class VideoFinder():
         get the latest videos from my favourites youtube channels
         and group them into a single web page
         '''
-        latest_videos_df = self.find_multichannel_videos(channels, 40)
+        latest_videos_df = self.find_multichannel_videos(channels)
         if latest_videos_df.shape[0] > 0 :
             self.write_to_file(self.create_html(latest_videos_df))
             return "Created new HTML file"
